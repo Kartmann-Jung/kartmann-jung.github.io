@@ -80,7 +80,7 @@ def evaluate_model(model, loader, device):
             all_probs.extend(probs[:, 1].cpu().numpy())
             all_patient_ids.extend(patient_ids)
 
-    # 전체 예측과 라벨 출력
+    # Print all predictions and labels
     print(f"All predictions: {np.array(all_preds)}")
     print(f"All labels: {np.array(all_labels)}")
     print(f"Label distribution - 0s: {sum(1 for x in all_labels if x == 0)}, 1s: {sum(1 for x in all_labels if x == 1)}")
@@ -90,10 +90,10 @@ def evaluate_model(model, loader, device):
     roc_auc = auc(fpr, tpr)
     cm = confusion_matrix(all_labels, all_preds)
 
-    # Balanced accuracy 계산
+    # Balanced accuracy
     balanced_acc = (cm[0,0]/(cm[0,0]+cm[0,1]) + cm[1,1]/(cm[1,0]+cm[1,1]))/2
 
-    # Classification report 생성
+    # Classification report
     report = {
         'inf': {'precision': cm[0,0]/(cm[0,0]+cm[1,0]) if (cm[0,0]+cm[1,0]) > 0 else 0,
                 'recall': cm[0,0]/(cm[0,0]+cm[0,1]) if (cm[0,0]+cm[0,1]) > 0 else 0,
@@ -107,7 +107,7 @@ def evaluate_model(model, loader, device):
 
     return precision, recall, f1, balanced_acc, roc_auc, cm, report, all_preds, all_labels, all_probs, all_patient_ids, fpr, tpr
 
-# ============================ 5. 시각화 함수 ============================
+# ============================ 5. Visualization ============================
 def plot_confusion_matrix(cm, save_path):
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -130,7 +130,7 @@ def plot_roc_curve(fpr, tpr, roc_auc, save_path):
     plt.savefig(save_path)
     plt.close()
 
-# ============================ 6. 데이터 로드 ============================
+# ============================ 6. Data Load ============================
 BASE_PATH = "./results"
 DATA_PATH = "./data"
 MODEL_PATH = os.path.join(BASE_PATH, "models/kfold")
@@ -142,7 +142,7 @@ os.makedirs(MODEL_PATH, exist_ok=True)
 os.makedirs(RESULTS_PATH, exist_ok=True)
 os.makedirs(OPTUNA_RESULTS_PATH, exist_ok=True)
 
-# Transform 정의
+# Transform 
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -150,11 +150,11 @@ transform = transforms.Compose([
 ])
 
 # Load and Validate Datasets
-print("\n=== 데이터셋 로드 시작 ===")
+print("\n=== Start Data Load ===")
 train_path = os.path.join(DATA_PATH, 'train')
 test_path = os.path.join(DATA_PATH, 'test')
 
-# 데이터 경로 확인
+# Root confirm
 print(f"Train 데이터 경로: {train_path}")
 print(f"Test 데이터 경로: {test_path}")
 
@@ -163,7 +163,7 @@ if not os.path.exists(train_path):
 if not os.path.exists(test_path):
     raise ValueError(f"Test 데이터 경로가 존재하지 않습니다: {test_path}")
 
-# 데이터셋 로드
+# Dataset Load
 train_dataset = UltrasoundDataset(train_path, transform=transform)
 test_dataset = UltrasoundDataset(test_path, transform=transform)
 
@@ -172,9 +172,9 @@ print(f"\nTrain 데이터셋 크기: {len(train_dataset)}")
 print(f"Test 데이터셋 크기: {len(test_dataset)}")
 
 if len(train_dataset) == 0:
-    raise ValueError("Train 데이터셋이 비어있습니다.")
+    raise ValueError("Train Dataset is empty.")
 if len(test_dataset) == 0:
-    raise ValueError("Test 데이터셋이 비어있습니다.")
+    raise ValueError("Test Dataset is empty.")
 
 # Count samples per class
 train_inf_count = sum(1 for _, label, _ in train_dataset if label == 0)
@@ -182,31 +182,31 @@ train_sup_count = sum(1 for _, label, _ in train_dataset if label == 1)
 test_inf_count = sum(1 for _, label, _ in test_dataset if label == 0)
 test_sup_count = sum(1 for _, label, _ in test_dataset if label == 1)
 
-print("\n=== 데이터셋 클래스 분포 ===")
+print("\n=== Data set Class Distribution ===")
 print(f"Train - inf: {train_inf_count}, sup: {train_sup_count}")
 print(f"Test - inf: {test_inf_count}, sup: {test_sup_count}")
 
-# Device 설정
+# Device definition 
 device = torch.device("cuda" if torch.cuda.is_available() else
                       "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"\nUsing device: {device}")
 
-# K-Fold 설정
+# K-Fold definition 
 k = 5
 skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
 
-# ============================ 7. Optuna 하이퍼파라미터 최적화 ============================
+# ============================ 7. Optuna Hyperparameter optimization ============================
 def objective(trial):
-    # 하이퍼파라미터 범위 설정
+    # Range of Hyperparameter
     lr = trial.suggest_float('lr', 1e-5, 1e-3, log=True)
     batch_size = trial.suggest_categorical('batch_size', [8, 16, 32])
     optimizer_name = trial.suggest_categorical('optimizer', ['AdamW', 'Adam', 'SGD'])
 
-    # 모델 생성
+    # Model generation
     model = model_fn().to(device)
     criterion = nn.CrossEntropyLoss()
 
-    # Optimizer 선택
+    # Optimizer 
     if optimizer_name == 'AdamW':
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     elif optimizer_name == 'Adam':
@@ -214,7 +214,7 @@ def objective(trial):
     else:  # SGD
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
-    # 첫 번째 fold만 사용하여 빠른 평가
+    # Fast evaluation with first Fold 
     train_idx, val_idx = next(skf.split(np.zeros(len(train_dataset)), [train_dataset[i][1] for i in range(len(train_dataset))]))
 
     train_loader = DataLoader(torch.utils.data.Subset(train_dataset, train_idx),
@@ -222,7 +222,7 @@ def objective(trial):
     val_loader = DataLoader(torch.utils.data.Subset(train_dataset, val_idx),
                           batch_size=batch_size, shuffle=False)
 
-    # 짧은 학습 (10 에포크)
+    # 10 Epoch
     best_val_f1 = 0
     for epoch in range(10):
         model.train()
@@ -246,17 +246,17 @@ def objective(trial):
                 val_preds.extend(preds.cpu().numpy())
                 val_labels.extend(labels.cpu().numpy())
 
-        # F1 점수 계산
+        # F1 metrics
         _, _, f1, _ = precision_recall_fscore_support(val_labels, val_preds, average='binary')
         best_val_f1 = max(best_val_f1, f1)
 
     return best_val_f1
 
-print("\n=== Optuna 하이퍼파라미터 최적화 시작 ===")
+print("\n=== Optuna Start===")
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=20)  # 20회 시도
+study.optimize(objective, n_trials=20)  # 20 trials
 
-print("\n=== 최적의 하이퍼파라미터 ===")
+print("\n=== Hyperparameter Suggestions ===")
 print(f"Best trial:")
 trial = study.best_trial
 print(f"  Value: {trial.value:.4f}")
@@ -264,10 +264,10 @@ print("  Params: ")
 for key, value in trial.params.items():
     print(f"    {key}: {value}")
 
-# Optuna 결과 시각화 및 저장
+# Optuna Results 
 print("\n=== Optuna 결과 시각화 ===")
 
-# 1. 파라미터 중요도
+# 1. Importance of parameter
 plt.figure(figsize=(10, 6))
 optuna.visualization.matplotlib.plot_param_importances(study)
 plt.title('Hyperparameter Importance')
@@ -275,7 +275,7 @@ plt.tight_layout()
 plt.savefig(os.path.join(OPTUNA_RESULTS_PATH, 'param_importance.png'))
 plt.close()
 
-# 2. 최적화 과정
+# 2. Optimization Process
 plt.figure(figsize=(10, 6))
 optuna.visualization.matplotlib.plot_optimization_history(study)
 plt.title('Optimization History')
@@ -283,7 +283,7 @@ plt.tight_layout()
 plt.savefig(os.path.join(OPTUNA_RESULTS_PATH, 'optimization_history.png'))
 plt.close()
 
-# 3. 파라미터 관계
+# 3. Relationship between parameters
 plt.figure(figsize=(12, 8))
 optuna.visualization.matplotlib.plot_parallel_coordinate(study)
 plt.title('Parallel Coordinate Plot')
@@ -291,7 +291,7 @@ plt.tight_layout()
 plt.savefig(os.path.join(OPTUNA_RESULTS_PATH, 'parallel_coordinate.png'))
 plt.close()
 
-# 4. 파라미터 분포
+# 4. Distribution of parameters
 plt.figure(figsize=(12, 8))
 optuna.visualization.matplotlib.plot_slice(study)
 plt.title('Parameter Distribution')
@@ -299,7 +299,7 @@ plt.tight_layout()
 plt.savefig(os.path.join(OPTUNA_RESULTS_PATH, 'parameter_distribution.png'))
 plt.close()
 
-# 결과를 텍스트 파일로도 저장
+# Save the Results
 with open(os.path.join(OPTUNA_RESULTS_PATH, 'optuna_results.txt'), 'w') as f:
     f.write("=== Optuna 최적화 결과 ===\n\n")
     f.write(f"Best trial value: {trial.value:.4f}\n\n")
@@ -315,7 +315,7 @@ with open(os.path.join(OPTUNA_RESULTS_PATH, 'optuna_results.txt'), 'w') as f:
         for key, value in t.params.items():
             f.write(f"    {key}: {value}\n")
 
-# 최적의 하이퍼파라미터 저장
+# Save the Hyperparameters 
 best_params = {
     'lr': trial.params['lr'],
     'optimizer': trial.params['optimizer'],
@@ -328,7 +328,7 @@ print(f"Optimizer: {best_params['optimizer']}")
 print(f"Batch size: {best_params['batch_size']}")
 print(f"\nOptuna 결과가 {OPTUNA_RESULTS_PATH}에 저장되었습니다.")
 
-# ============================ 8. K-Fold 검증 ============================
+# ============================ 8. K-Fold Validation ============================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 k = 5
 skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
@@ -342,13 +342,13 @@ print("=== K-Fold 검증 시작 ===")
 for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(train_dataset)), [train_dataset[i][1] for i in range(len(train_dataset))]), 1):
     print(f"\n📁 Fold {fold}")
 
-    # 데이터 로더 생성
+    # Data Loader
     train_loader = DataLoader(torch.utils.data.Subset(train_dataset, train_idx),
                             batch_size=best_params['batch_size'], shuffle=True)
     val_loader = DataLoader(torch.utils.data.Subset(train_dataset, val_idx),
                           batch_size=best_params['batch_size'], shuffle=False)
 
-    # 모델 생성 및 학습
+    # Model Generation and Learning 
     model = model_fn().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=best_params['lr'])
@@ -385,7 +385,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(train_dataset
     # Confusion Matrix 저장
     plot_confusion_matrix(cm, os.path.join(fold_dir, "confusion_matrix.png"))
 
-    # 베스트 모델 업데이트
+    # Best Model Updates
     if f1 > best_f1:
         best_f1 = f1
         best_fold = fold
@@ -408,8 +408,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(train_dataset
 
 print(f"\n✅ K-Fold 검증 완료! Best Fold: {best_fold}, Best F1 Score: {best_f1:.4f}")
 
-# ============================ 9. Test Set 평가 ============================
-print("\n=== Test Set 평가 시작 ===")
+# ============================ 9. Test Set Evaluation ============================
+print("\n=== Test Set Evaluatin Start ===")
 
 # 베스트 모델 로드
 best_model = model_fn().to(device)
@@ -420,7 +420,7 @@ else:
     best_model.load_state_dict(checkpoint['model_state_dict'])
 best_model.eval()
 
-# Test set 평가
+# Test set 
 test_loader = DataLoader(test_dataset, batch_size=best_params['batch_size'], shuffle=False)
 precision, recall, f1, balanced_acc, roc_auc, cm, report, all_preds, all_labels, all_probs, all_patient_ids, fpr, tpr = evaluate_model(best_model, test_loader, device)
 
@@ -428,14 +428,14 @@ precision, recall, f1, balanced_acc, roc_auc, cm, report, all_preds, all_labels,
 test_dir = os.path.join(RESULTS_PATH, "test_evaluation")
 os.makedirs(test_dir, exist_ok=True)
 
-# Confusion Matrix 저장
+# Confusion Matrix 
 plot_confusion_matrix(cm, os.path.join(test_dir, "confusion_matrix.png"))
 
-# ROC Curve 저장
+# ROC Curve 
 fpr, tpr, _ = roc_curve(all_labels, all_probs)
 plot_roc_curve(fpr, tpr, roc_auc, os.path.join(test_dir, "roc_curve.png"))
 
-# 상세 결과 저장
+# Details 
 with open(os.path.join(test_dir, "detailed_results.txt"), "w") as f:
     f.write("=== Test Set 상세 평가 결과 ===\n")
     f.write(f"Best Fold: {best_fold}\n")
@@ -452,7 +452,7 @@ with open(os.path.join(test_dir, "detailed_results.txt"), "w") as f:
         f.write(f"  Confidence: {prob:.4f}\n")
         f.write(f"  {'Correct' if pred == true else 'Incorrect'}\n\n")
 
-# 전체 요약 저장
+# Summery
 with open(os.path.join(RESULTS_PATH, "overall_summary.txt"), "w") as f:
     f.write("=== 전체 평가 요약 ===\n")
     f.write(f"Best Fold: {best_fold}\n")
@@ -477,7 +477,7 @@ print(f"\n✅ 평가 완료! 결과가 {RESULTS_PATH}에 저장되었습니다."
 print(f"Best Fold: {best_fold}, Best F1 Score: {best_f1:.4f}")
 print(f"Test Set 성능 - Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}, ROC AUC: {roc_auc:.4f}")
 
-# ============================ 10. 결과 시각화 ============================
+# ============================ 10. Results Visualization ============================
 print("\n=== 결과 시각화 시작 ===")
 
 # 1. K-Fold 성능 시각화
@@ -499,7 +499,7 @@ plt.grid(True, alpha=0.3)
 plt.savefig(os.path.join(RESULTS_PATH, 'kfold_performance.png'))
 plt.close()
 
-# 2. Test Set Confusion Matrix 시각화
+# 2. Test Set Confusion Matrix
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
 plt.title('Test Set Confusion Matrix')
@@ -508,7 +508,7 @@ plt.xlabel('Predicted Label')
 plt.savefig(os.path.join(RESULTS_PATH, 'test_confusion_matrix.png'))
 plt.close()
 
-# 3. ROC Curve 시각화
+# 3. ROC Curve 
 plt.figure(figsize=(8, 6))
 plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -521,7 +521,7 @@ plt.legend(loc="lower right")
 plt.savefig(os.path.join(RESULTS_PATH, 'test_roc_curve.png'))
 plt.close()
 
-# 4. 클래스별 예측 확률 분포 시각화
+# 4. Distributions 
 plt.figure(figsize=(10, 6))
 for label in [0, 1]:
     class_probs = [prob for prob, true_label in zip(all_probs, all_labels) if true_label == label]
