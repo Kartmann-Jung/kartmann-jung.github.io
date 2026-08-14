@@ -2,87 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Goun Jung - Clinical Anatomy 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goun Jung — Anatomy &amp; Imaging</title>
+  <meta name="description" content="Goun Jung — PhD candidate in anatomy at Yonsei University College of Dentistry. Clinical and applied anatomy with imaging and computational analysis.">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px;
-      background-color: #f8f9fa;
-    }
-    h1 {
-      margin-bottom: 10px;
-    }
-    p {
-      font-size: 18px;
-      line-height: 1.6;
-    }
-    .button {
-      display: block;
-      margin: 20px auto;
-      padding: 16px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      background-color: #4F81BD;
-      color: white;
-      text-decoration: none;
-      width: 360px;
-    }
-    .contact {
-      margin-top: 40px;
-      font-size: 16px;
-      color: #333;
-    }
-    .email-button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #6c757d;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-    }
-    .final-note {
-      margin-top: 60px;
-      padding-top: 20px;
-      border-top: 1px solid #ccc;
-      font-size: 16px;
-      color: #444;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+    body { font-family: Arial, Helvetica, sans-serif; text-align:center; padding:44px 20px;
+           background:#f8f9fa; color:#222; line-height:1.6; }
+    .avatar { width:150px; height:150px; border-radius:50%; object-fit:cover;
+              margin:0 auto 14px; display:block; box-shadow:0 2px 10px rgba(0,0,0,.12); }
+    .avatar-fallback { display:flex; align-items:center; justify-content:center;
+              background:#4F81BD; color:#fff; font-size:52px; font-weight:bold; }
+    h1 { margin:6px 0 2px; }
+    .role { color:#555; font-size:15px; margin:0 0 4px; }
+    .tagline { color:#4F81BD; font-weight:bold; font-size:16px; margin:0 0 16px; }
+    .links { font-size:15px; margin:0 0 22px; }
+    .links a { text-decoration:none; margin:0 6px; }
+    .bio { max-width:620px; margin:0 auto 8px; font-size:16px; text-align:left; }
+    .section-title { font-size:13px; letter-spacing:.06em; color:#999; text-transform:uppercase; margin:34px 0 10px; }
+    .button { display:block; margin:12px auto; padding:16px 26px; font-size:17px; border-radius:10px;
+              background:#4F81BD; color:#fff; text-decoration:none; max-width:460px; text-align:center; }
+    .button small { display:block; font-weight:normal; font-size:13px; opacity:.9; margin-top:4px; }
+    .contact { margin-top:30px; font-size:16px; }
+    .final-note { margin:48px auto 0; padding-top:20px; border-top:1px solid #ccc;
+                  font-size:15px; color:#555; max-width:620px; }
   </style>
 </head>
 <body>
 
-  <h1>Goun Jung</h1>
-  <p>2025 International Conference of Clinical Anatomy</p>
+  <!-- 사진: profile.jpg 를 루트에 올리면 자동으로 표시됩니다. 없으면 이니셜 원이 대신 나옵니다. -->
+  <img class="avatar" src="profile.jpg" alt="Goun Jung"
+       onerror="this.outerHTML='&lt;div class=&quot;avatar avatar-fallback&quot;&gt;GJ&lt;/div&gt;'">
 
-  <p>
-    Welcome, and thank you for visiting.<br>
-    This website has been created to support materials presented at the<br>
-    <strong>2025 International Conference of Clinical Anatomy</strong>.<br>
-    It will remain active during the conference and later transition into a personal academic homepage.
+  <h1>Goun Jung</h1>
+  <p class="role">PhD Candidate · Division of Anatomy &amp; Developmental Biology,
+     Yonsei University College of Dentistry, Seoul</p>
+  <p class="tagline">Clinical &amp; applied anatomy · imaging · computational analysis</p>
+
+  <div class="links">
+    <a href="https://github.com/Kartmann-Jung">GitHub</a>·
+    <a href="mailto:kartmannjung@yuhs.ac">Email</a>
+    <!-- 준비되면 주석 해제: ·<a href="[ORCID URL]">ORCID</a>·<a href="[Scholar URL]">Google Scholar</a> -->
+  </div>
+
+  <p class="bio">
+    I study how anatomical structures are organized and how they change, connecting clinical
+    and applied anatomy with imaging and computational methods — micro-CT, ultrasonography,
+    statistical shape modeling, and structure-tensor analysis. My current work spans the fascial
+    architecture of the hand and age-related remodeling of dental hard tissues.
+    <!-- 아래 한 줄은 원하시면 지우세요 -->
+    Coming from a physical therapy background, I care about how anatomy translates into practice.
   </p>
 
-  <a class="button" href="topic1/index.html">🧠 Topic 1: Deep Learning for Oral Ultrasonography</a>
-  <a class="button" href="topic2/index.html">✋ Topic 2: Fascial Mapping of the Dorsal Hand</a>
+  <div class="section-title">Presentations · IFAA 2026 (Melbourne)</div>
+
+  <a class="button" href="topic1/index.html">
+    ✋ Structured Continuity of the Dorsal Hand Fascia
+    <small>Poster (P0063) · 22nd Congress of the IFAA</small>
+  </a>
+  <a class="button" href="topic2/index.html">
+    🦷 Directional Remodeling of the Dental Pulp Chamber with Aging
+    <small>Oral presentation · 22nd Congress of the IFAA</small>
+  </a>
 
   <div class="contact">
-    <p>📧 Email: <a href="mailto:kartmannjung@yuhs.ac">kartmannjung@yuhs.ac</a></p>
-    <a class="email-button" href="mailto:kartmannjung@yuhs.ac">Send Email</a>
+    📧 <a href="mailto:kartmannjung@yuhs.ac">kartmannjung@yuhs.ac</a>
   </div>
 
   <div class="final-note">
-    <p>
-      🌐 As a researcher navigating the inescapable era of AI, I always welcome honest conversations—whether it's sharing insights or facing challenges together. 😊<br>
-      Please feel free to <a href="mailto:kartmannjung@yuhs.ac">contact me anytime</a>!
-    </p>
-    <p>
-      💬 If you come across a Medium article worth recommending, I’d love to hear about it!
-    </p>
+    As a researcher navigating the era of AI, I welcome honest conversations —
+    on ideas or challenges alike. Feel free to
+    <a href="mailto:kartmannjung@yuhs.ac">reach out</a>.
   </div>
 
 </body>
